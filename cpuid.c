@@ -86,7 +86,7 @@ static PyObject* cpuid_check(PyObject *self, PyObject *noargs)
         cpuid_vendor(vendor);
 
         if (strcmp(vendor, "GenuineIntel") && strcmp(vendor, "AuthenticAMD")) {
-                PyErr_SetString(PyExc_TypeError, "invalid vendor string");
+                PyErr_SetString(PyExc_RuntimeError, "invalid vendor string");
                 return NULL;
         }
 
@@ -103,6 +103,6 @@ static PyObject* cpuid_check(PyObject *self, PyObject *noargs)
         }
 
         /* returned if microarchitecture is not found */
-        PyErr_SetString(PyExc_TypeError, "unsupported CPU microarchitecture");
+        PyErr_SetString(PyExc_RuntimeError, "unsupported CPU microarchitecture");
         return NULL;
 }
