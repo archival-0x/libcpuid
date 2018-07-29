@@ -76,7 +76,42 @@ static void cpuid_vendor(char * name)
         cpuid(&eax, (uint32_t *) &name[0], (uint32_t *) &name[8], (uint32_t *) &name[4]);
 }
 
+////////////////////////////////////////////////
+/* Sample Python C API extension interfaces */
+////////////////////////////////////////////////
+
+
+static PyObject* 
+cpuid_vendor_check(PyObject *self, PyObject *noargs)
+{
+
+    /* pass char of 13 bytes to private cpuid_vendor function */
+    char vendor[13];
+    cpuid_vendor(vendor);
+    
+    /* return string of vendor */
+    return Py_BuildValue("s", vendor);
+}
+
+
+static PyObject*
+cpuid_microarch(PyObject *self, PyObject *noargs)
+{
+    /* retrieve cpuid data through unsigned 32-bit int */
+    uint32_t cpuid_data = cpuid_processor_info();
+    
+    /* unmask microarchitecture through unmask */
+    uint32_t cpu_type = cpuid_data & 0xF0FF0;
+    
+    /* return microarch number for user */
+    return Py_BuildValue("i", cpu_type);    
+}
+
+
+////////////////////////////////
 /* main Python interface */
+////////////////////////////////
+
 static PyObject* cpuid_check(PyObject *self, PyObject *noargs)
 {
         int i;
@@ -85,7 +120,7 @@ static PyObject* cpuid_check(PyObject *self, PyObject *noargs)
         char vendor[13];
         cpuid_vendor(vendor);
 
-        if (strcmp(vendor, "GenuineIntel") && strcmp(vendor, "AuthenticAMD")) {
+        if (strcmp(vendor, "GenuineIntel")) {
                 PyErr_SetString(PyExc_RuntimeError, "invalid vendor string");
                 return NULL;
         }
