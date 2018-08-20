@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
 
-CPUID_EXTENSION = Extension('cpuid', ['cpuid.c'],
+CPUID_EXTENSION = Extension('cpuid', ['cpuid-python.c'],
                              extra_compile_args=["-Wall"])
 
 setup(

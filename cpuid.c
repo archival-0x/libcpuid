@@ -1,28 +1,5 @@
-#include <stdint.h>
-#include <string.h>
-#include <python2.7/Python.h>
+#include "cpuid.h"
 
-
-/* docstrings for method */
-static char cpuid_docstring[] =
-        "Checks for appropriate vendor string and processor microarchitecture.";
-
-/* available functions for interface */
-static PyObject* cpuid_check(PyObject *self, PyObject *noargs);
-
-/* module specification */
-static PyMethodDef module_methods[] = {
-        {"cpuid_check", cpuid_check, METH_VARARGS, cpuid_docstring},
-        {NULL, NULL, 0, NULL}
-};
-
-/* initialize the module */
-PyMODINIT_FUNC initcpuid(void)
-{
-        (void) Py_InitModule("cpuid", module_methods);
-}
-
-/* represents CPUID microarchs (already unmasked) that are supported */
 static const uint32_t valid_pmu_cpu_type[25] = {
         0x106A0, 0x106E0, 0x206E0,          // IntelNehalem
         0x20650, 0x206C0, 0x206F0,          // IntelWestmere
@@ -34,6 +11,33 @@ static const uint32_t valid_pmu_cpu_type[25] = {
         0x30670, 0x50670,                   // IntelSilvermont
         0x806e0, 0x906e0                    // IntelKabylake
 };
+
+
+/* checks for CPUID supports */
+int check_cpuid_support()
+{
+        uint32_t pre_change, post_change;
+        uint32_t id_flag = 0x200000;
+
+        asm volatile("pushfl\n"          /* Save %eflags to restore later.  */
+                     "pushfl\n"          /* Push second copy, for manipulation.  */
+                     "popl %1\n"         /* Pop it into post_change.  */
+                     "movl %1,%0\n"      /* Save copy in pre_change.   */
+                     "xorl %2,%1\n"      /* Tweak bit in post_change.  */
+                     "pushl %1\n"        /* Push tweaked copy... */
+                     "popfl\n"           /* ... and pop it into %eflags.  */
+                     "pushfl\n"          /* Did it change?  Push new %eflags... */
+                     "popl %1\n"         /* ... and pop it into post_change.  */
+                     "popfl"               /* Restore original value.  */
+                    : "=&r" (pre_change), "=&r" (post_change)
+                    : "ir" (id_flag));
+
+        if (((pre_change ^ post_change) & id_flag) ==0)
+            return 1;
+        else
+            return 0;
+}
+
 
 /* inline assembly interface to cpuid */
 static inline void cpuid(uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
@@ -47,8 +51,11 @@ static inline void cpuid(uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *
 }
 
 /* returns processor information in eax register */
-static uint32_t cpuid_processor_info()
+enum CPUArch_t cpuid_microarch()
 {
+        /* represents CPU microarchitecture */
+        uint32_t cpu_arch;
+
         /* temporary registers to hold results */
         uint32_t eax, ebx, ecx, edx;
 
@@ -58,12 +65,14 @@ static uint32_t cpuid_processor_info()
         /* use all registers for output consuming purposes. */
         cpuid(&eax, &ebx, &ecx, &edx);
 
-        /* return signature, must be unmasked */
-        return eax;
+        /* retrieve CPU microarchitecture with unmask */
+        cpu_arch = eax & 0xF0FF0;
+
+        /* TODO: interpre cpu_arch */
 }
 
 /* stores vendor string in provided char pointer */
-static void cpuid_vendor(char * name)
+void cpuid_vendor(char * name)
 {
         /* set 12th char to 0 */
         name[12] = 0;
@@ -74,70 +83,4 @@ static void cpuid_vendor(char * name)
 
         /* call cpuid, storing output in ebx, edx, and ecx */
         cpuid(&eax, (uint32_t *) &name[0], (uint32_t *) &name[8], (uint32_t *) &name[4]);
-}
-
-////////////////////////////////////////////////
-/* Sample Python C API extension interfaces */
-////////////////////////////////////////////////
-
-
-static PyObject* 
-cpuid_vendor_check(PyObject *self, PyObject *noargs)
-{
-
-    /* pass char of 13 bytes to private cpuid_vendor function */
-    char vendor[13];
-    cpuid_vendor(vendor);
-    
-    /* return string of vendor */
-    return Py_BuildValue("s", vendor);
-}
-
-
-static PyObject*
-cpuid_microarch(PyObject *self, PyObject *noargs)
-{
-    /* retrieve cpuid data through unsigned 32-bit int */
-    uint32_t cpuid_data = cpuid_processor_info();
-    
-    /* unmask microarchitecture through unmask */
-    uint32_t cpu_type = cpuid_data & 0xF0FF0;
-    
-    /* return microarch number for user */
-    return Py_BuildValue("i", cpu_type);    
-}
-
-
-////////////////////////////////
-/* main Python interface */
-////////////////////////////////
-
-static PyObject* cpuid_check(PyObject *self, PyObject *noargs)
-{
-        int i;
-
-        /* check vendor: only Intel and AMD processors supported */
-        char vendor[13];
-        cpuid_vendor(vendor);
-
-        if (strcmp(vendor, "GenuineIntel")) {
-                PyErr_SetString(PyExc_RuntimeError, "invalid vendor string");
-                return NULL;
-        }
-
-        /* check CPU microarchitecture through unmask */
-        uint32_t cpuid_data = cpuid_processor_info();
-        uint32_t cpu_type = cpuid_data & 0xF0FF0;
-
-        /* check if microarchitecture is appropriate for use */
-        for (i=0; i <= sizeof(valid_pmu_cpu_type); i++){
-                if (valid_pmu_cpu_type[i] == cpu_type) {
-                        /* return a exit code 0 */
-                        return Py_BuildValue("i", 0);
-                }
-        }
-
-        /* returned if microarchitecture is not found */
-        PyErr_SetString(PyExc_RuntimeError, "unsupported CPU microarchitecture");
-        return NULL;
 }
