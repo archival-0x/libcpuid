@@ -2,13 +2,15 @@
 #include <python2.7/Python.h>
 
 /* available functions for interface */
-static PyObject* cpuid_vendor_check(PyObject *self, PyObject *noargs);
-static PyObject* cpuid_microarch_check(PyObject *self, PyObject *noargs);
+static PyObject* pycpuid_support(PyObject *self, PyObject *noargs);
+static PyObject* pycpuid_vendor(PyObject *self, PyObject *noargs);
+static PyObject* pycpuid_microarch(PyObject *self, PyObject *noargs);
 
 /* module specification */
 static PyMethodDef module_methods[] = {
-        {"cpuid_check", cpuid_vendor_check, METH_VARARGS, NULL},
-        {"cpuid_microarch", cpuid_microarch_check, METH_VARARGS, NULL},
+        {"cpuid_support", pycpuid_support, METH_VARARGS, NULL},
+        {"cpuid_check", pycpuid_vendor, METH_VARARGS, NULL},
+        {"cpuid_microarch", pycpuid_microarch, METH_VARARGS, NULL},
         {NULL, NULL, 0, NULL}
 };
 
@@ -16,13 +18,21 @@ static PyMethodDef module_methods[] = {
 /* initialize the module */
 PyMODINIT_FUNC initcpuid(void)
 {
-        (void) Py_InitModule("cpuid", module_methods);
+    (void) Py_InitModule("cpuid", module_methods);
 }
 
-
-/* cpuid_vendor_check: return C string of CPU vendor */
 static PyObject*
-cpuid_vendor_check(PyObject *self, PyObject *noargs)
+pycpuid_support(PyObject *self, PyObject *noargs)
+{
+    if (check_cpuid_support())
+        return Py_True;
+    else
+        return Py_False;
+
+}
+
+static PyObject*
+pycpuid_vendor(PyObject *self, PyObject *noargs)
 {
 
     /* pass char of 13 bytes to private cpuid_vendor function */
@@ -34,11 +44,11 @@ cpuid_vendor_check(PyObject *self, PyObject *noargs)
 }
 
 
-/* cpuid_microarch: return CPU microarchitecture */
 static PyObject*
-cpuid_microarch_check(PyObject *self, PyObject *noargs)
+pycpuid_microarch(PyObject *self, PyObject *noargs)
 {
     // TODO
+    return Py_BuildValue("s", "TODO!");
 }
 
 
