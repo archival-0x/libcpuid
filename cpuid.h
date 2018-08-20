@@ -3,20 +3,16 @@
 
 #include <stdint.h>
 
-typedef enum {
-        IntelTest,
-        IntelTest2,
-        IntelTest3
-} CPUArch_t;
-
-
 /* checks if processor supports CPUID instructions */
-int check_cpuid_support();
+int check_cpuid_support(void);
+
+/* returns highest possible value CPUID can recognize for processor information */
+uint32_t cpuid_highest_input(void);
 
 /* returns a C-string that defines the vendor of CPU */
 void cpuid_vendor(char * name);
 
 /* returns an enum that defines the microarchitecuture of the CPU */
-CPUArch_t cpuid_microarch();
+const char * cpuid_microarch(void);
 
 #endif

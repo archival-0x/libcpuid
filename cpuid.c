@@ -1,18 +1,5 @@
 #include "cpuid.h"
 
-static const uint32_t valid_pmu_cpu_type[25] = {
-    0x106A0, 0x106E0, 0x206E0,          // IntelNehalem
-    0x20650, 0x206C0, 0x206F0,          // IntelWestmere
-    0x206A0, 0x206D0, 0x306e0,          // IntelSandyBridge
-    0x306A0,                            // IntelIvyBridge
-    0x306C0, 0x306F0, 0x40650, 0x40660, // IntelHaswell
-    0x306D0, 0x40670, 0x406F0, 0x50660, // IntelBroadwell
-    0x406e0, 0x50650, 0x506e0,          // IntelSkylake
-    0x30670, 0x50670,                   // IntelSilvermont
-    0x806e0, 0x906e0                    // IntelKabylake
-};
-
-
 /* inline assembly interface to cpuid */
 static inline void 
 cpuid(uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
@@ -26,9 +13,9 @@ cpuid(uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
 }
 
 
-/* checks for CPUID supports */
+/* checks for CPUID support */
 int 
-check_cpuid_support()
+check_cpuid_support(void)
 {
     uint32_t pre_change, post_change;
     uint32_t id_flag = 0x200000;
@@ -46,14 +33,33 @@ check_cpuid_support()
                 : "=&r" (pre_change), "=&r" (post_change)
                 : "ir" (id_flag));
 
-    if (((pre_change ^ post_change) & id_flag) ==0)
+    if (((pre_change ^ post_change) & id_flag) == 0)
         return 1;
     else
         return 0;
 }
 
 
-/* stores vendor string in provided char pointer */
+/* returns highest input value recognizable by CPUID in 
+ * eax register 
+ *      eax = 0
+ */
+uint32_t
+cpuid_highest_input(void)
+{
+    /* eax = 0 for highest value */
+    uint32_t eax, ebx, ecx, edx;
+    eax = 0;
+    
+    /* call cpuid, storing output in eax */
+    cpuid(&eax, &ebx, &ecx, &edx);
+    return eax;
+}
+
+
+/* stores vendor string in provided char pointer
+ *      eax = 0 
+ */
 void 
 cpuid_vendor(char * name)
 {
@@ -69,12 +75,15 @@ cpuid_vendor(char * name)
 }
 
 
-/* returns processor information in eax register */
-CPUArch_t 
-cpuid_microarch()
+
+
+/* returns processor information in eax register
+ *      eax = 1
+ *      bits = 8..11
+ */
+const char *
+cpuid_microarch(void)
 {
-    /* represents CPU microarchitecture */
-    uint32_t cpu_arch;
 
     /* temporary registers to hold results */
     uint32_t eax, ebx, ecx, edx;
@@ -85,9 +94,53 @@ cpuid_microarch()
     /* use all registers for output consuming purposes. */
     cpuid(&eax, &ebx, &ecx, &edx);
 
-    /* retrieve CPU microarchitecture with unmask */
-    cpu_arch = eax & 0xF0FF0;
-
-    /* TODO: interpre cpu_arch */
+    /* retrieve CPU microarchitecture with unmask 
+     * Credit: https://github.com/mozilla/rr/blob/master/src/PerfCounters.cc
+     */ 
+    switch (eax & 0xF0FF0) {
+        case 0x006F0:
+        case 0x10660:
+            return "IntelMerom";
+        case 0x10670:
+        case 0x106D0:
+            return "IntelPenryn";
+        case 0x106A0:
+        case 0x106E0:
+        case 0x206E0:
+            return "IntelNehalem";
+        case 0x20650:
+        case 0x206C0:
+        case 0x206F0:
+            return "IntelWestmere";
+        case 0x206A0:
+        case 0x206D0:
+        case 0x306e0:
+            return "IntelSandyBridge";
+        case 0x306A0:
+            return "IntelIvyBridge";
+        case 0x306C0:
+        case 0x306F0:
+        case 0x40650:
+        case 0x40660:
+            return "IntelHaswell";
+        case 0x306D0:
+        case 0x40670:
+        case 0x406F0:
+        case 0x50660:
+            return "IntelBroadwell";
+        case 0x406e0:
+        case 0x50650:
+        case 0x506e0:
+            return "IntelSkylake";
+        case 0x30670:
+        case 0x50670:
+            return "IntelSilvermont";
+        case 0x806e0:
+        case 0x906e0:
+            return "IntelKabylake";
+        case 0x00f10:
+            return "AMDRyzen";
+        default:
+            return NULL;
+    }
 }
-

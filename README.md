@@ -2,6 +2,4 @@
 
 Extensible CPUID interaction library
 
-# Usage
-
 

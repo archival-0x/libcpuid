@@ -3,33 +3,52 @@
 
 /* available functions for interface */
 static PyObject* pycpuid_support(PyObject *self, PyObject *noargs);
+static PyObject* pycpuid_highest_input(PyObject *self, PyObject *noargs);
 static PyObject* pycpuid_vendor(PyObject *self, PyObject *noargs);
 static PyObject* pycpuid_microarch(PyObject *self, PyObject *noargs);
 
 /* module specification */
 static PyMethodDef module_methods[] = {
-        {"cpuid_support", pycpuid_support, METH_VARARGS, NULL},
-        {"cpuid_check", pycpuid_vendor, METH_VARARGS, NULL},
-        {"cpuid_microarch", pycpuid_microarch, METH_VARARGS, NULL},
-        {NULL, NULL, 0, NULL}
+    {"cpuid_support", pycpuid_support, METH_VARARGS, NULL},
+    {"cpuid_highest_input", pycpuid_highest_input, METH_VARARGS, NULL},
+    {"cpuid_vendor", pycpuid_vendor, METH_VARARGS, NULL},
+    {"cpuid_microarch", pycpuid_microarch, METH_VARARGS, NULL},
+    {NULL, NULL, 0, NULL}
 };
 
 
-/* initialize the module */
+/* module initialization*/
 PyMODINIT_FUNC initcpuid(void)
 {
     (void) Py_InitModule("cpuid", module_methods);
 }
 
+//////////////////////////////////////////////////////////////////////////
+
 static PyObject*
 pycpuid_support(PyObject *self, PyObject *noargs)
 {
+    /* return as Python boolean */
     if (check_cpuid_support())
         return Py_True;
     else
         return Py_False;
 
 }
+
+
+static PyObject*
+pycpuid_highest_input(PyObject *self, PyObject *noargs)
+{
+    /* store highest CPUID input value as unsigned int */
+    uint32_t highest_input;
+    highest_input = cpuid_highest_input();
+    
+    /* build as Python integer and return */
+    return Py_BuildValue("i", highest_input);
+
+}
+
 
 static PyObject*
 pycpuid_vendor(PyObject *self, PyObject *noargs)
@@ -47,8 +66,9 @@ pycpuid_vendor(PyObject *self, PyObject *noargs)
 static PyObject*
 pycpuid_microarch(PyObject *self, PyObject *noargs)
 {
-    // TODO
-    return Py_BuildValue("s", "TODO!");
+    const char * ptype;
+    ptype = cpuid_microarch();
+    return Py_BuildValue("s", ptype);
 }
 
 
