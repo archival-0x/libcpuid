@@ -10,7 +10,7 @@ int check_cpuid_support(void);
 uint32_t cpuid_highest_input(void);
 
 /* returns a C-string that defines the vendor of CPU */
-void cpuid_vendor(char * name);
+const char * cpuid_vendor(void);
 
 /* returns an enum that defines the microarchitecuture of the CPU */
 const char * cpuid_microarch(void);

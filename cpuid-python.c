@@ -33,7 +33,6 @@ pycpuid_support(PyObject *self, PyObject *noargs)
         return Py_True;
     else
         return Py_False;
-
 }
 
 
@@ -46,7 +45,6 @@ pycpuid_highest_input(PyObject *self, PyObject *noargs)
     
     /* build as Python integer and return */
     return Py_BuildValue("i", highest_input);
-
 }
 
 
@@ -54,9 +52,9 @@ static PyObject*
 pycpuid_vendor(PyObject *self, PyObject *noargs)
 {
 
-    /* pass char of 13 bytes to private cpuid_vendor function */
-    char vendor[13];
-    cpuid_vendor(vendor);
+    /* retrieve vendor from private cpuid_vendor function */
+    const char * vendor;
+    vendor = cpuid_vendor();
 
     /* return string of vendor */
     return Py_BuildValue("s", vendor);
@@ -80,11 +78,9 @@ pycpuid_microarch(PyObject *self, PyObject *noargs)
  * library in order to create other Python C API 
  * methods deployable in our Python code, reducing
  * overhead.
- */
 
 static PyObject* my_cpuid_checker(PyObject *self, PyObject *noargs)
 {
-        /* check vendor: only Intel and AMD processors supported */
         char vendor[13];
         cpuid_vendor(vendor);
 
@@ -93,10 +89,7 @@ static PyObject* my_cpuid_checker(PyObject *self, PyObject *noargs)
                 return NULL;
         }
 
-        /* TODO: check CPU microarch through unmask */
-
-        /* returned if microarchitecture is not found */
         PyErr_SetString(PyExc_RuntimeError, "unsupported CPU microarchitecture");
         return NULL;
 }
-
+*/

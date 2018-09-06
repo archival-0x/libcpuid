@@ -60,9 +60,11 @@ cpuid_highest_input(void)
 /* stores vendor string in provided char pointer
  *      eax = 0 
  */
-void 
-cpuid_vendor(char * name)
+const char *
+cpuid_vendor(void)
 {
+    char name[13];
+
     /* set 12th char to 0 */
     name[12] = 0;
 
@@ -72,6 +74,35 @@ cpuid_vendor(char * name)
 
     /* call cpuid, storing output in ebx, edx, and ecx */
     cpuid(&eax, (uint32_t *) &name[0], (uint32_t *) &name[8], (uint32_t *) &name[4]);
+
+    if (strcmp(vendor, "GenuineIntel") == 0)
+       return "Intel"; 
+    else if (strcmp(vendor, "AuthenticAMD") == 0)
+        return "AMD";
+    else if (strcmp(vendor, "CentaurHauls") == 0)
+        return "Centaur";
+    else if (strcmp(vendor, "CyrixInstead") == 0)
+        return "Cyrix";
+    else if (strcmp(vendor, "HygonGenuine") == 0)
+        return "Hygon";
+    else if (strcmp(vendor, "TransmetaCPU") == 0)
+        return "Transmeta";
+    else if (strcmp(vendor, "Geode by NSC") == 0)
+        return "NSC";
+    else if (strcmp(vendor, "NexGenDriven") == 0)
+        return "NexGen";
+    else if (strcmp(vendor, "RiseRiseRise") == 0)
+        return "Rise";
+    else if (strcmp(vendor, "SiS SiS SiS ") == 0)
+        return "SiS";
+    else if (strcmp(vendor, "UMC UMC UMC ") == 0)
+        return "UMC";
+    else if (strcmp(vendor, "VIA VIA VIA ") == 0)
+        return "VIA";
+    else if (strcmp(vendor, "Vortex86 SoC") == 0)
+        return "Vortex";
+    else
+        return "Other";
 }
 
 
