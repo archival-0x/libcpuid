@@ -1,5 +1,5 @@
 #include "cpuid.h"
-#include <python2.7/Python.h>
+#include <Python.h>
 
 /* available functions for interface */
 static PyObject* pycpuid_support(PyObject *self, PyObject *noargs);
