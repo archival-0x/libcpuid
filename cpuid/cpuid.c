@@ -1,7 +1,7 @@
 #include "cpuid.h"
 
 /* inline assembly interface to cpuid */
-static inline void 
+static inline void
 cpuid(uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
 {
     asm volatile("cpuid"
@@ -14,7 +14,7 @@ cpuid(uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
 
 
 /* checks for CPUID support */
-int 
+int
 check_cpuid_support(void)
 {
     uint32_t pre_change, post_change;
@@ -40,8 +40,8 @@ check_cpuid_support(void)
 }
 
 
-/* returns highest input value recognizable by CPUID in 
- * eax register 
+/* returns highest input value recognizable by CPUID in
+ * eax register
  *      eax = 0
  */
 uint32_t
@@ -50,7 +50,7 @@ cpuid_highest_input(void)
     /* eax = 0 for highest value */
     uint32_t eax, ebx, ecx, edx;
     eax = 0;
-    
+
     /* call cpuid, storing output in eax */
     cpuid(&eax, &ebx, &ecx, &edx);
     return eax;
@@ -58,7 +58,7 @@ cpuid_highest_input(void)
 
 
 /* stores vendor string in provided char pointer
- *      eax = 0 
+ *      eax = 0
  */
 const char *
 cpuid_vendor(void)
@@ -76,7 +76,7 @@ cpuid_vendor(void)
     cpuid(&eax, (uint32_t *) &name[0], (uint32_t *) &name[8], (uint32_t *) &name[4]);
 
     if (strcmp(vendor, "GenuineIntel") == 0)
-       return "Intel"; 
+       return "Intel";
     else if (strcmp(vendor, "AuthenticAMD") == 0)
         return "AMD";
     else if (strcmp(vendor, "CentaurHauls") == 0)
@@ -125,9 +125,7 @@ cpuid_microarch(void)
     /* use all registers for output consuming purposes. */
     cpuid(&eax, &ebx, &ecx, &edx);
 
-    /* retrieve CPU microarchitecture with unmask 
-     * Credit: https://github.com/mozilla/rr/blob/master/src/PerfCounters.cc
-     */ 
+    /* retrieve CPU microarchitecture with unmask */
     switch (eax & 0xF0FF0) {
         case 0x006F0:
         case 0x10660:

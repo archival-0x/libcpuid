@@ -42,7 +42,7 @@ pycpuid_highest_input(PyObject *self, PyObject *noargs)
     /* store highest CPUID input value as unsigned int */
     uint32_t highest_input;
     highest_input = cpuid_highest_input();
-    
+
     /* build as Python integer and return */
     return Py_BuildValue("i", highest_input);
 }
@@ -74,15 +74,15 @@ pycpuid_microarch(PyObject *self, PyObject *noargs)
 
 /* Example Python interface method
  * =======================================
- * This is an example of how we can harness the 
- * library in order to create other Python C API 
+ * This is an example of how we can harness the
+ * library in order to create other Python C API
  * methods deployable in our Python code, reducing
  * overhead.
-
+ */
 static PyObject* my_cpuid_checker(PyObject *self, PyObject *noargs)
 {
-        char vendor[13];
-        cpuid_vendor(vendor);
+        const char * vendor;
+        vendor = cpuid_vendor();
 
         if (strcmp(vendor, "GenuineIntel")) {
                 PyErr_SetString(PyExc_RuntimeError, "invalid vendor string");
@@ -92,4 +92,3 @@ static PyObject* my_cpuid_checker(PyObject *self, PyObject *noargs)
         PyErr_SetString(PyExc_RuntimeError, "unsupported CPU microarchitecture");
         return NULL;
 }
-*/
